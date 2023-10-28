@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
 public class Server {
 	private static Logger logger = LoggerFactory.getLogger(Server.class);
 
-	public static void main(String[] args) throws InterruptedException {
+	public static void main(String[] args) {
 		logger.warn("starting server");
 		port(4242);
 		Stripe.apiKey = PropertyUtils.getProperty("stripe.api.key");
@@ -35,7 +35,7 @@ public class Server {
 					String YOUR_DOMAIN = PropertyUtils.getProperty("domain");
 					SessionCreateParams params = SessionCreateParams.builder()
 							.setUiMode(SessionCreateParams.UiMode.EMBEDDED)
-							.setMode(SessionCreateParams.Mode.PAYMENT)
+							.setMode(SessionCreateParams.Mode.SUBSCRIPTION)
 							.setReturnUrl(YOUR_DOMAIN + "/return?session_id={CHECKOUT_SESSION_ID}")
 							.setAutomaticTax(SessionCreateParams.AutomaticTax.builder()
 									.setEnabled(true)
@@ -44,7 +44,7 @@ public class Server {
 									.setQuantity(1L)
 									// Provide the exact Price ID (for example,
 									// pr_1234) of the product you want to sell
-									.setPrice("{{PRICE_ID}}")
+									.setPrice("price_1O5x9oA8dDzAfRCMgRx3mu3U")
 									.build())
 							.build();
 

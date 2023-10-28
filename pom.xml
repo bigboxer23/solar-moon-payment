@@ -90,7 +90,7 @@
               <manifest>
                 <addClasspath>true</addClasspath>
                 <classpathPrefix>lib/</classpathPrefix>
-                <mainClass>com.bigboxer23.Server</mainClass>
+                <mainClass>com.bigboxer23.solar_moon.payments.Server</mainClass>
               </manifest>
             </archive>
           </configuration>
