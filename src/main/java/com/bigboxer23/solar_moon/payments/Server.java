@@ -1,4 +1,4 @@
-package com.bigboxer23;
+package com.bigboxer23.solar_moon.payments;
 
 import static spark.Spark.get;
 import static spark.Spark.port;
@@ -22,7 +22,6 @@ public class Server {
 	public static void main(String[] args) throws InterruptedException {
 		logger.warn("starting server");
 		port(4242);
-		Thread.sleep(5000);
 		Stripe.apiKey = PropertyUtils.getProperty("stripe.api.key");
 
 		staticFiles.externalLocation(Paths.get("public").toAbsolutePath().toString());
