@@ -1,20 +1,33 @@
 package com.bigboxer23.solar_moon.payments;
 
+import com.bigboxer23.solar_moon.CustomerComponent;
+import com.bigboxer23.solar_moon.data.Customer;
+import com.bigboxer23.solar_moon.lambda.data.CognitoUserAttributes;
 import com.bigboxer23.solar_moon.lambda.utils.PropertyUtils;
 import com.bigboxer23.solar_moon.web.Transaction;
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
+import com.squareup.moshi.Moshi;
 import com.stripe.Stripe;
+import com.stripe.exception.SignatureVerificationException;
 import com.stripe.exception.StripeException;
+import com.stripe.model.*;
+import com.stripe.model.billingportal.Configuration;
 import com.stripe.model.checkout.Session;
+import com.stripe.net.*;
+import com.stripe.param.billingportal.ConfigurationCreateParams;
 import com.stripe.param.checkout.SessionCreateParams;
 import jakarta.servlet.http.HttpServletRequest;
-import java.util.HashMap;
-import java.util.Map;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -32,9 +45,11 @@ public class StripeAPIController {
 	}
 
 	@Transaction
-	@PostMapping(value = "/create-checkout-session")
-	public String createCheckoutSession(HttpServletRequest servletRequest) throws StripeException {
-		logger.warn("create-checkout-session");
+	@PostMapping(value = "/v1/create-checkout-session")
+	public String createCheckoutSession(HttpServletRequest servletRequest, @RequestBody String priceId)
+			throws StripeException {
+		CheckoutPrice price = gson.fromJson(priceId, CheckoutPrice.class);
+		logger.warn("create-checkout-session " + price.getId() + " q:" + price.getCount());
 		SessionCreateParams params = SessionCreateParams.builder()
 				.setUiMode(SessionCreateParams.UiMode.EMBEDDED)
 				.setMode(SessionCreateParams.Mode.SUBSCRIPTION)
@@ -43,10 +58,8 @@ public class StripeAPIController {
 						.setEnabled(true)
 						.build())
 				.addLineItem(SessionCreateParams.LineItem.builder()
-						.setQuantity(1L)
-						// Provide the exact Price ID (for example,
-						// pr_1234) of the product you want to sell
-						.setPrice("price_1O5x9oA8dDzAfRCMgRx3mu3U")
+						.setQuantity(price.getCount())
+						.setPrice(price.getId())
 						.build())
 				.build();
 
