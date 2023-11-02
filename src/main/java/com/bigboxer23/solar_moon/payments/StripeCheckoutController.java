@@ -6,19 +6,12 @@ import com.bigboxer23.solar_moon.lambda.data.CognitoUserAttributes;
 import com.bigboxer23.solar_moon.lambda.utils.PropertyUtils;
 import com.bigboxer23.solar_moon.web.Transaction;
 import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
 import com.squareup.moshi.Moshi;
 import com.stripe.Stripe;
-import com.stripe.exception.SignatureVerificationException;
 import com.stripe.exception.StripeException;
-import com.stripe.model.*;
-import com.stripe.model.billingportal.Configuration;
 import com.stripe.model.checkout.Session;
-import com.stripe.net.*;
-import com.stripe.param.billingportal.ConfigurationCreateParams;
 import com.stripe.param.checkout.SessionCreateParams;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.*;
 import org.slf4j.Logger;
@@ -31,10 +24,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-public class StripeAPIController {
-	private static final Logger logger = LoggerFactory.getLogger(StripeAPIController.class);
+public class StripeCheckoutController {
+	private static final Logger logger = LoggerFactory.getLogger(StripeCheckoutController.class);
 
 	private static final Gson gson = new Gson();
+
+	protected static final CustomerComponent customerComponent = new CustomerComponent();
 
 	@Value("${domain}")
 	private String domain;
@@ -46,13 +41,22 @@ public class StripeAPIController {
 
 	@Transaction
 	@PostMapping(value = "/v1/create-checkout-session")
-	public String createCheckoutSession(HttpServletRequest servletRequest, @RequestBody String priceId)
+	public String createCheckoutSession(HttpServletRequest request, @RequestBody String checkoutJSON)
 			throws StripeException {
-		CheckoutPrice price = gson.fromJson(priceId, CheckoutPrice.class);
+		CheckoutPrice price = gson.fromJson(checkoutJSON, CheckoutPrice.class);
+		Customer customer = authorize(request, customerComponent);
+		if (customer == null) {
+			logger.warn("Bad customer id");
+			return "";
+		}
 		logger.warn("create-checkout-session " + price.getId() + " q:" + price.getCount());
 		SessionCreateParams params = SessionCreateParams.builder()
 				.setUiMode(SessionCreateParams.UiMode.EMBEDDED)
 				.setMode(SessionCreateParams.Mode.SUBSCRIPTION)
+				.setCustomer(customer.getStripeCustomerId())
+				.setCustomerUpdate(SessionCreateParams.CustomerUpdate.builder()
+						.setAddress(SessionCreateParams.CustomerUpdate.Address.AUTO)
+						.build())
 				.setReturnUrl(domain + "/return?session_id={CHECKOUT_SESSION_ID}")
 				.setAutomaticTax(SessionCreateParams.AutomaticTax.builder()
 						.setEnabled(true)
@@ -90,5 +94,27 @@ public class StripeAPIController {
 						.getAsString());
 
 		return gson.toJson(map);
+	}
+
+	public static Customer authorize(HttpServletRequest servletRequest, CustomerComponent component) {
+
+		String[] chunks = Optional.ofNullable(servletRequest.getHeader(HttpHeaders.AUTHORIZATION))
+				.map(authHeader -> authHeader.split("\\."))
+				.orElse(null);
+		if (chunks == null || chunks.length != 3) {
+			return null;
+		}
+		try {
+			return Optional.ofNullable(new Moshi.Builder()
+							.build()
+							.adapter(CognitoUserAttributes.class)
+							.fromJson(new String(Base64.getUrlDecoder().decode(chunks[1]))))
+					.map(CognitoUserAttributes::getSub)
+					.map(component::findCustomerByCustomerId)
+					.orElse(null);
+		} catch (IOException e) {
+			logger.warn("authorize", e);
+		}
+		return null;
 	}
 }
