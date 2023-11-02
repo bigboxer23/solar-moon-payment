@@ -1,5 +1,6 @@
 package com.bigboxer23.solar_moon.payments;
 
+import com.bigboxer23.payments.StripeBillingPortalComponent;
 import com.bigboxer23.solar_moon.data.Customer;
 import com.bigboxer23.solar_moon.web.Transaction;
 import com.stripe.exception.StripeException;
@@ -11,9 +12,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 /** */
+@RestController
 public class StripeBillingPortalController {
+
+	private final StripeBillingPortalComponent component = new StripeBillingPortalComponent();
 	private static final Logger logger = LoggerFactory.getLogger(StripeBillingPortalController.class);
 
 	@Value("${stripe.productId}")
@@ -24,12 +29,6 @@ public class StripeBillingPortalController {
 
 	@Value("${stripe.subscription.price.yr}")
 	private String annualPrice;
-
-	@Value("${domain}")
-	private String domain;
-
-	@Value("${stripe.billing.portal}")
-	private String billingPortalId;
 
 	/**
 	 * Programmatically create a portal
@@ -80,8 +79,7 @@ public class StripeBillingPortalController {
 								.build())
 						.build())
 				.build();
-
-		Configuration configuration = Configuration.create(configParams);
+		Configuration.create(configParams);
 	}
 
 	@Transaction
@@ -92,15 +90,6 @@ public class StripeBillingPortalController {
 			logger.warn("Bad customer id");
 			return "";
 		}
-		com.stripe.param.billingportal.SessionCreateParams params =
-				com.stripe.param.billingportal.SessionCreateParams.builder()
-						.setCustomer(customer.getStripeCustomerId())
-						.setReturnUrl(domain + "/userManagement")
-						.setConfiguration(billingPortalId)
-						.build();
-
-		com.stripe.model.billingportal.Session session = com.stripe.model.billingportal.Session.create(params);
-		logger.info("returning session url: " + session.getUrl());
-		return session.getUrl();
+		return component.createCustomerPortalSession(customer);
 	}
 }
