@@ -31,7 +31,7 @@ public class StripeCheckoutController {
 	private static final StripeCheckoutComponent checkoutComponent = new StripeCheckoutComponent();
 
 	@Transaction
-	@PostMapping(value = "/v1/create-checkout-session")
+	@PostMapping(value = "/v1/billing/checkout")
 	public String createCheckoutSession(HttpServletRequest request, @RequestBody String checkoutJSON)
 			throws StripeException {
 		Customer customer = authorize(request, customerComponent);
@@ -44,7 +44,7 @@ public class StripeCheckoutController {
 	}
 
 	@Transaction
-	@GetMapping("/session-status")
+	@GetMapping("/v1/billing/status")
 	public String sessionStatus(HttpServletRequest servletRequest) throws StripeException {
 		logger.warn("session-status");
 		return gson.toJson(checkoutComponent.sessionStatus(servletRequest.getParameter("session_id")));
