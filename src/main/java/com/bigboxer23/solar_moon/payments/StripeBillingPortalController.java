@@ -47,8 +47,7 @@ public class StripeBillingPortalController {
 		return subscriptionComponent.getActiveSubscriptionPriceInfo(customer.getStripeCustomerId());
 	}
 
-	public void createCustomerBillingPortal() throws StripeException
-	{
+	public void createCustomerBillingPortal() throws StripeException {
 		component.createCustomerBillingPortal();
 	}
 }
