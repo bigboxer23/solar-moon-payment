@@ -2,7 +2,7 @@ package com.bigboxer23.solar_moon.payments;
 
 import com.bigboxer23.payments.CheckoutPrice;
 import com.bigboxer23.payments.StripeCheckoutComponent;
-import com.bigboxer23.solar_moon.CustomerComponent;
+import com.bigboxer23.solar_moon.customer.CustomerComponent;
 import com.bigboxer23.solar_moon.data.Customer;
 import com.bigboxer23.solar_moon.lambda.data.CognitoUserAttributes;
 import com.bigboxer23.solar_moon.web.Transaction;
