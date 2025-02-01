@@ -9,13 +9,13 @@ import com.stripe.exception.StripeException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Collections;
 import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /** */
+@Slf4j
 @RestController
 public class StripeBillingPortalController {
 
@@ -23,14 +23,12 @@ public class StripeBillingPortalController {
 
 	private final StripeSubscriptionComponent subscriptionComponent = new StripeSubscriptionComponent();
 
-	private static final Logger logger = LoggerFactory.getLogger(StripeBillingPortalController.class);
-
 	@Transaction
 	@PostMapping("v1/billing/portal")
 	public String createCustomerPortalSession(HttpServletRequest request) throws StripeException {
 		Customer customer = StripeCheckoutController.authorize(request, StripeCheckoutController.customerComponent);
 		if (customer == null) {
-			logger.warn("Bad customer id");
+			log.warn("Bad customer id");
 			return "";
 		}
 		return component.createCustomerPortalSession(customer);
@@ -41,7 +39,7 @@ public class StripeBillingPortalController {
 	public List<SubscriptionPriceInfo> getActiveSubscriptions(HttpServletRequest request) throws StripeException {
 		Customer customer = StripeCheckoutController.authorize(request, StripeCheckoutController.customerComponent);
 		if (customer == null) {
-			logger.warn("Bad customer id");
+			log.warn("Bad customer id");
 			return Collections.emptyList();
 		}
 		return subscriptionComponent.getActiveSubscriptionPriceInfo(customer.getStripeCustomerId());

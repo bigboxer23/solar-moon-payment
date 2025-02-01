@@ -12,18 +12,16 @@ import com.stripe.exception.StripeException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 public class StripeCheckoutController {
-	private static final Logger logger = LoggerFactory.getLogger(StripeCheckoutController.class);
-
 	private static final Gson gson = new Gson();
 
 	protected static final CustomerComponent customerComponent = new CustomerComponent();
@@ -36,7 +34,7 @@ public class StripeCheckoutController {
 			throws StripeException {
 		Customer customer = authorize(request, customerComponent);
 		if (customer == null) {
-			logger.warn("Bad customer id");
+			log.warn("Bad customer id");
 			return "";
 		}
 		return gson.toJson(
@@ -46,7 +44,7 @@ public class StripeCheckoutController {
 	@Transaction
 	@GetMapping("/v1/billing/status")
 	public String sessionStatus(HttpServletRequest servletRequest) throws StripeException {
-		logger.warn("session-status");
+		log.warn("session-status");
 		return gson.toJson(checkoutComponent.sessionStatus(servletRequest.getParameter("session_id")));
 	}
 
@@ -67,7 +65,7 @@ public class StripeCheckoutController {
 					.flatMap(component::findCustomerByCustomerId)
 					.orElse(null);
 		} catch (IOException e) {
-			logger.warn("authorize", e);
+			log.warn("authorize", e);
 		}
 		return null;
 	}
